@@ -1,4 +1,4 @@
-name: zerotier-planet-builder
+name: my-builder
 
 on:
   workflow_dispatch
