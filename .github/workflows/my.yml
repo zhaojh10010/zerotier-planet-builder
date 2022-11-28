@@ -1,0 +1,34 @@
+name: zerotier-planet-builder
+
+on:
+  workflow_dispatch
+        
+jobs:
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Edit the planet IP
+      run: sed -i "s/1.1.1.1/${{ secrets.IP }}/g" ./patch/patch.json
+    - name: Edit username and password
+      run: sed -i "s/admin/${{ secrets.USERNAME }}/g" ./init.sh && sed -i "s/zero-ui/${{ secrets.PASSWORD }}/g" ./init.sh
+    - name: Build the Zerotier Planet Docker image
+      run: docker build . --file Dockerfile --tag zerotier-planet
+    - name: install 7zip
+      run: sudo apt-get -qq -y install p7zip-full
+    - name: Save the Docker image
+      run: docker save zerotier-planet|gzip > zerotier-planet.tar.gz && 7z a -t7z -mx=9 -p${{ secrets.PASSWORD }} zerotier-planet.tar.gz.7z zerotier-planet.tar.gz
+    - name: Upload to Release Action
+      # You may pin to the exact commit or the version.
+      # uses: Shopify/upload-to-release@9942a4c936dab172f7101dcc7dc20528ea949102
+      uses: Shopify/upload-to-release@v1.0.1
+      with:
+        # Artifact name
+        name: zerotier-planet.tar.gz.7z
+        # Path to the file to upload
+        path: zerotier-planet.tar.gz.7z
+        # Content type for the file
+        #content-type: # optional, default is application/octet-stream
+        # secrets.GITHUB_TOKEN
+        repo-token: secrets.ZT_TOKEN
